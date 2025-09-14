@@ -14,8 +14,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     if "heatings" in data["response"]:
         for heating_key, state in data["response"]["heatings"].items():
-            HEATING_TYPE = state.get("type")
-            if HEATING_TYPE not in HEATING_SWITCH_CONFIG:
+            heating_type = state.get("type")
+            if heating_type not in HEATING_SWITCH_CONFIG:
                 continue
 
             entities.append(

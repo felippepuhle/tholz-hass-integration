@@ -74,7 +74,7 @@ class HeatingSwitch(SwitchEntity):
         if data:
             self._state = data["response"]["heatings"][self._heating_key]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self):
         self._state["on"] = True
 
         config = HEATING_SWITCH_CONFIG[self._state.get("type")]
@@ -83,7 +83,7 @@ class HeatingSwitch(SwitchEntity):
 
         await self._manager.set_status({"heatings": {self._heating_key: self._state}})
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self):
         self._state["on"] = False
 
         config = HEATING_SWITCH_CONFIG[self._state.get("type")]

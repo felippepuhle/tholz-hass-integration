@@ -13,7 +13,7 @@ from .utils.const import (
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(_hass, _config):
     return True
 
 

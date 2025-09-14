@@ -40,11 +40,11 @@ class OutputSwitch(SwitchEntity):
         if data:
             self._state = data["response"]["outputs"][self._output_key]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self):
         self._state["on"] = True
         await self._manager.set_status({"outputs": {self._output_key: self._state}})
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self):
         self._state["on"] = False
         await self._manager.set_status({"outputs": {self._output_key: self._state}})
 
