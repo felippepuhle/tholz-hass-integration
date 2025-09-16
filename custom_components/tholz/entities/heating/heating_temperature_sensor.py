@@ -33,6 +33,11 @@ HEATING_TEMPERATURE_SENSOR_CONFIG = {
             "name": "Temperatura Recirculação",
         },
     },
+    HEATING_TYPE.TERMOSTATO: {
+        "t1": {
+            "name": "Temperatura Boiler",
+        },
+    },
 }
 
 
