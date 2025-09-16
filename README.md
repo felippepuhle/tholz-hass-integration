@@ -1,5 +1,6 @@
 [![GitHub Release](https://img.shields.io/github/release/felippepuhle/tholz-hass-integration.svg?style=flat-square)](https://github.com/felippepuhle/tholz-hass-integration/releases)
-[![License](https://img.shields.io/github/license/felippepuhle/tholz-hass-integration.svg?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/github/license/felippepuhle/tholz-hass-integration.svg?style=flat-square)](https://github.com/felippepuhle/tholz-hass-integration/LICENSE)
+[![hacs](https://img.shields.io/badge/HACS-default-orange.svg?style=flat-square)](https://hacs.xyz)
 
 # Tholz Home Assistant Integration
 
@@ -18,12 +19,15 @@ This custom integration provides control and monitoring for **Tholz Smart device
 
 ## Installation
 
-We are working towards publishing this integration in [HACS](https://hacs.xyz). In the meantime, you can install it manually:
+The recommended installation method is via [HACS](https://hacs.xyz/):
 
-1. Add this repository as a **custom repository** in HACS: [https://github.com/felippepuhle/tholz-hass-integration](https://github.com/felippepuhle/tholz-hass-integration)  
-   - (select the **Integration** category)
-2. Search for **“Tholz”** and install the integration.
-3. Restart Home Assistant.
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=felippepuhle&repository=tholz-hass-integration&category=integration)
+
+Notes:
+
+- HACS only installs the files; you still need to go to `Settings → Devices & Services` and add the integration manually.  
+- For manual installation (advanced users), copy `custom_components/tholz` to your Home Assistant `custom_components` directory.
+
 
 ## Configuration
 
@@ -31,11 +35,11 @@ After restarting, add the integration via the **Home Assistant UI**:
 
 1. Go to **Settings → Devices & Services → Add Integration → Tholz**.
 
-   <img src="https://iili.io/KAXQ6bI.png" alt="step1" height="200">
+   <img src="https://iili.io/KAXQ6bI.png" alt="step1" width="400">
 
 2. Provide the required information:  
 
-   <img src="https://iili.io/KAXQrRp.png" alt="step2" height="400">
+   <img src="https://iili.io/KAXQrRp.png" alt="step2" width="350">
 
      - **Name**: Friendly name for your device  
      - **IP Address**: Device IP address  
@@ -45,7 +49,7 @@ After restarting, add the integration via the **Home Assistant UI**:
 ## Example configuration in action
 
 **Controls:**  
-<img src="https://iili.io/KAXQixt.png" alt="controls" style="max-height:200px;">
+<img src="https://iili.io/KAXQixt.png" alt="controls" width="640">
 
 **Sensors:**  
-<img src="https://iili.io/KAXQLsn.png" alt="sensors" style="max-height:200px;">
+<img src="https://iili.io/KAXQLsn.png" alt="sensors" width="640">
