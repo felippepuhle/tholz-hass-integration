@@ -1,5 +1,5 @@
 from .entities.heating.heating_switch import HEATING_SWITCH_CONFIG, HeatingSwitch
-from .entities.output.output_switch import OutputSwitch
+from .entities.output.output_switch import OUTPUT_TYPE_NAMES, OutputSwitch
 from .utils.const import DOMAIN
 
 
@@ -30,6 +30,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
             )
     if "outputs" in data["response"]:
         for output_key, state in data["response"]["outputs"].items():
+            if state is None:
+                continue
+
+            output_type = state.get("id")
+            if output_type not in OUTPUT_TYPE_NAMES:
+                continue
+
             entities.append(
                 OutputSwitch(
                     hass,

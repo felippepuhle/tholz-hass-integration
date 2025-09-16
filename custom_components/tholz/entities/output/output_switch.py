@@ -54,7 +54,7 @@ class OutputSwitch(SwitchEntity):
 
     @property
     def name(self):
-        type_name = OUTPUT_TYPE_NAMES.get(OUTPUT_TYPE(self._state.get("type")))
+        type_name = OUTPUT_TYPE_NAMES.get(OUTPUT_TYPE(self._state.get("id")))
         return f"{self._entry.data.get(CONF_NAME_KEY)} {type_name}"
 
     @property
