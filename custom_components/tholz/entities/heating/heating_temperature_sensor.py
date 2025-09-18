@@ -2,7 +2,6 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfTemperature
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
-from ...utils.device import MANUFACTURER, DEVICE_MODEL_NAMES
 from .const import HEATING_TYPE
 
 
@@ -42,11 +41,13 @@ HEATING_TEMPERATURE_SENSOR_CONFIG = {
 
 
 class HeatingTemperatureSensor(SensorEntity):
-    def __init__(self, hass, entry, manager, model, heating_key, sensor_key, state):
+    def __init__(
+        self, hass, entry, manager, device_info, heating_key, sensor_key, state
+    ):
         self._hass = hass
         self._entry = entry
         self._manager = manager
-        self._model = model
+        self._device_info = device_info
         self._id = id
         self._heating_key = heating_key
         self._sensor_key = sensor_key
@@ -87,9 +88,4 @@ class HeatingTemperatureSensor(SensorEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry.entry_id)},
-            "name": self._entry.data.get(CONF_NAME_KEY),
-            "manufacturer": MANUFACTURER,
-            "model": DEVICE_MODEL_NAMES.get(self._model),
-        }
+        return self._device_info

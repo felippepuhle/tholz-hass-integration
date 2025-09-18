@@ -7,6 +7,7 @@ from .entities.heating.heating_temperature_sensor import (
     HeatingTemperatureSensor,
 )
 from .utils.const import DOMAIN
+from .utils.device import get_device_info
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -15,7 +16,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if not data:
         return
 
-    model = data["response"].get("firmwareSec")
+    device_info = get_device_info(entry, data["response"])
 
     entities = []
     for sensor_key in HEADER_SENSOR_CONFIG:
@@ -24,7 +25,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 hass,
                 entry,
                 manager,
-                model,
+                device_info,
                 sensor_key,
                 data["response"],
             )
@@ -41,7 +42,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                         hass,
                         entry,
                         manager,
-                        model,
+                        device_info,
                         heating_key,
                         sensor_key,
                         state,

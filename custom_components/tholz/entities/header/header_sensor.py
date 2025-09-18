@@ -1,7 +1,6 @@
 from homeassistant.components.sensor import SensorEntity
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
-from ...utils.device import MANUFACTURER, DEVICE_MODEL_NAMES
 
 ERROR_TRANSFORM = {
     0: "0: Sem erro ou aviso.",
@@ -56,11 +55,11 @@ HEADER_SENSOR_CONFIG = {
 
 
 class HeaderSensor(SensorEntity):
-    def __init__(self, hass, entry, manager, model, sensor_key, state):
+    def __init__(self, hass, entry, manager, device_info, sensor_key, state):
         self._hass = hass
         self._entry = entry
         self._manager = manager
-        self._model = model
+        self._device_info = device_info
         self._id = id
         self._sensor_key = sensor_key
 
@@ -98,9 +97,4 @@ class HeaderSensor(SensorEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry.entry_id)},
-            "name": self._entry.data.get(CONF_NAME_KEY),
-            "manufacturer": MANUFACTURER,
-            "model": DEVICE_MODEL_NAMES.get(self._model),
-        }
+        return self._device_info

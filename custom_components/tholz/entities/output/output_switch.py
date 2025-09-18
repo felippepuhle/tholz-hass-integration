@@ -1,7 +1,6 @@
 from homeassistant.components.switch import SwitchEntity
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
-from ...utils.device import MANUFACTURER, DEVICE_MODEL_NAMES
 from .const import OUTPUT_TYPE
 
 OUTPUT_TYPE_NAMES = {
@@ -23,11 +22,11 @@ for i in range(40, 60):
 
 
 class OutputSwitch(SwitchEntity):
-    def __init__(self, hass, entry, manager, model, output_key, state):
+    def __init__(self, hass, entry, manager, device_info, output_key, state):
         self._hass = hass
         self._entry = entry
         self._manager = manager
-        self._model = model
+        self._device_info = device_info
         self._output_key = output_key
 
         self._state = state
@@ -67,9 +66,4 @@ class OutputSwitch(SwitchEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry.entry_id)},
-            "name": self._entry.data.get(CONF_NAME_KEY),
-            "manufacturer": MANUFACTURER,
-            "model": DEVICE_MODEL_NAMES.get(self._model),
-        }
+        return self._device_info

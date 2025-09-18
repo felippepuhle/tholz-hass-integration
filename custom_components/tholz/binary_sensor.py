@@ -3,6 +3,7 @@ from .entities.header.header_binary_sensor import (
     HeaderBinarySensor,
 )
 from .utils.const import DOMAIN
+from .utils.device import get_device_info
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -11,7 +12,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if not data:
         return
 
-    model = data["response"].get("firmwareSec")
+    device_info = get_device_info(entry, data["response"])
 
     entities = []
     for sensor_key in HEADER_BINARY_SENSOR_CONFIG:
@@ -20,7 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 hass,
                 entry,
                 manager,
-                model,
+                device_info,
                 sensor_key,
                 data["response"],
             )

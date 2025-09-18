@@ -3,6 +3,7 @@ from .entities.heating.heating_water_heater import (
     HeatingWaterHeater,
 )
 from .utils.const import DOMAIN
+from .utils.device import get_device_info
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -11,7 +12,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if not data:
         return
 
-    model = data["response"].get("firmwareSec")
+    device_info = get_device_info(entry, data["response"])
 
     entities = []
     if "heatings" in data["response"]:
@@ -25,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     hass,
                     entry,
                     manager,
-                    model,
+                    device_info,
                     heating_key,
                     state,
                 )

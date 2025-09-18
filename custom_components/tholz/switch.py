@@ -1,6 +1,7 @@
 from .entities.heating.heating_switch import HEATING_SWITCH_CONFIG, HeatingSwitch
 from .entities.output.output_switch import OUTPUT_TYPE_NAMES, OutputSwitch
 from .utils.const import DOMAIN
+from .utils.device import get_device_info
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -9,7 +10,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if not data:
         return
 
-    model = data["response"].get("firmwareSec")
+    device_info = get_device_info(entry, data["response"])
 
     entities = []
     if "heatings" in data["response"]:
@@ -23,7 +24,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     hass,
                     entry,
                     manager,
-                    model,
+                    device_info,
                     heating_key,
                     state,
                 )
@@ -42,7 +43,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     hass,
                     entry,
                     manager,
-                    model,
+                    device_info,
                     output_key,
                     state,
                 )
