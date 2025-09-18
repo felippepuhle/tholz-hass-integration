@@ -16,6 +16,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = []
     for sensor_key in HEADER_BINARY_SENSOR_CONFIG:
+        if data["response"].get(sensor_key) is None:
+            continue
+
         entities.append(
             HeaderBinarySensor(
                 hass,

@@ -20,6 +20,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = []
     for sensor_key in HEADER_SENSOR_CONFIG:
+        if data["response"].get(sensor_key) is None:
+            continue
+
         entities.append(
             HeaderSensor(
                 hass,
@@ -37,6 +40,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 continue
 
             for sensor_key in HEATING_TEMPERATURE_SENSOR_CONFIG[heating_type]:
+                if state.get(sensor_key) is None:
+                    continue
+
                 entities.append(
                     HeatingTemperatureSensor(
                         hass,
