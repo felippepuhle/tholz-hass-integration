@@ -71,7 +71,7 @@ class HeatingSwitch(SwitchEntity):
     async def async_update(self):
         data = await self._manager.get_status()
         if data:
-            self._state = data["response"]["heatings"][self._heating_key]
+            self._state = data["heatings"][self._heating_key]
 
     async def async_turn_on(self):
         self._state["on"] = True

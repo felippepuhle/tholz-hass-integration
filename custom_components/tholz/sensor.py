@@ -16,11 +16,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if not data:
         return
 
-    device_info = get_device_info(entry, data["response"])
+    device_info = get_device_info(entry, data)
 
     entities = []
     for sensor_key in HEADER_SENSOR_CONFIG:
-        if data["response"].get(sensor_key) is None:
+        if data.get(sensor_key) is None:
             continue
 
         entities.append(
@@ -30,11 +30,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 manager,
                 device_info,
                 sensor_key,
-                data["response"],
+                data,
             )
         )
-    if "heatings" in data["response"]:
-        for heating_key, state in data["response"]["heatings"].items():
+    if "heatings" in data:
+        for heating_key, state in data["heatings"].items():
             heating_type = state.get("type")
             if heating_type not in HEATING_TEMPERATURE_SENSOR_CONFIG:
                 continue

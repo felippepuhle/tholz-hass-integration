@@ -34,7 +34,7 @@ class HeaderBinarySensor(BinarySensorEntity):
     async def async_update(self):
         data = await self._manager.get_status()
         if data:
-            self._state = data["response"].get(self._sensor_key)
+            self._state = data.get(self._sensor_key)
 
     @property
     def is_on(self):

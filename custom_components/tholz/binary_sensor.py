@@ -12,11 +12,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if not data:
         return
 
-    device_info = get_device_info(entry, data["response"])
+    device_info = get_device_info(entry, data)
 
     entities = []
     for sensor_key in HEADER_BINARY_SENSOR_CONFIG:
-        if data["response"].get(sensor_key) is None:
+        if data.get(sensor_key) is None:
             continue
 
         entities.append(
@@ -26,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 manager,
                 device_info,
                 sensor_key,
-                data["response"],
+                data,
             )
         )
 

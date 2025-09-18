@@ -46,10 +46,10 @@ DEVICE_MODEL_NAMES = {
 }
 
 
-def get_device_info(entry, response):
+def get_device_info(entry, data):
     return {
         "identifiers": {(DOMAIN, entry.entry_id)},
         "name": entry.data.get(CONF_NAME_KEY),
         "manufacturer": "Tholz",
-        "model": DEVICE_MODEL_NAMES.get(response.get("id")),
+        "model": DEVICE_MODEL_NAMES.get(data.get("id")),
     }

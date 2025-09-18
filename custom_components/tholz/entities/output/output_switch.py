@@ -37,7 +37,7 @@ class OutputSwitch(SwitchEntity):
     async def async_update(self):
         data = await self._manager.get_status()
         if data:
-            self._state = data["response"]["outputs"][self._output_key]
+            self._state = data["outputs"][self._output_key]
 
     async def async_turn_on(self):
         self._state["on"] = True

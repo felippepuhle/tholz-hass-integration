@@ -14,13 +14,14 @@ class TholzSocketClient:
     def get_status(self):
         try:
             with socket.create_connection((self.host, self.port), timeout=3) as s:
-                msg = {
-                    "command": "getDevice",
-                }
+                msg = {"command": "getDevice"}
                 _LOGGER.debug("[get_status] call: %s", msg)
+
                 s.sendall(json.dumps(msg).encode())
                 data = s.recv(8192)
-                self.last_data = json.loads(data.decode())
+                decoded = json.loads(data.decode())
+
+                self.last_data = decoded.get("response")
                 _LOGGER.debug("[get_status] data: %s", self.last_data)
                 return self.last_data
         except Exception as e:
@@ -32,9 +33,12 @@ class TholzSocketClient:
             with socket.create_connection((self.host, self.port), timeout=3) as s:
                 msg = {"command": "setDevice", "argument": payload}
                 _LOGGER.debug("[set_status] call: %s", msg)
+
                 s.sendall(json.dumps(msg).encode())
                 data = s.recv(8192)
-                self.last_data = json.loads(data.decode())
+                decoded = json.loads(data.decode())
+
+                self.last_data = decoded.get("response")
                 _LOGGER.debug("[set_status] data: %s", self.last_data)
                 return self.last_data
         except Exception as e:
