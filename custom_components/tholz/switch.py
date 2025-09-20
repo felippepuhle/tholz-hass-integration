@@ -1,8 +1,6 @@
-from .entities.heating.heating_switch import get_heating_switch_config, HeatingSwitch
-from .entities.heating.utils import heating_has_valid_temperatures
-from .entities.output.output_switch import OUTPUT_TYPE_NAMES, OutputSwitch
+from .entities.heating.heating_switch import get_heating_switches
+from .entities.output.output_switch import get_output_switches
 from .utils.const import DOMAIN
-from .utils.device import get_device_info
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -11,43 +9,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if not data:
         return
 
-    device_info = get_device_info(entry, data)
-
-    entities = []
-    if "heatings" in data:
-        for heating_key, state in data["heatings"].items():
-            config = get_heating_switch_config(state)
-            if config is None or not heating_has_valid_temperatures(state):
-                continue
-
-            entities.append(
-                HeatingSwitch(
-                    hass,
-                    entry,
-                    manager,
-                    device_info,
-                    ["heatings", heating_key],
-                    state,
-                )
-            )
-    if "outputs" in data:
-        for output_key, state in data["outputs"].items():
-            if state is None:
-                continue
-
-            output_type = state.get("id")
-            if output_type not in OUTPUT_TYPE_NAMES:
-                continue
-
-            entities.append(
-                OutputSwitch(
-                    hass,
-                    entry,
-                    manager,
-                    device_info,
-                    output_key,
-                    state,
-                )
-            )
+    entities = [
+        *get_heating_switches(hass, entry, manager, data),
+        *get_output_switches(hass, entry, manager, data),
+    ]
 
     async_add_entities(entities, update_before_add=True)

@@ -1,7 +1,10 @@
 from homeassistant.components.switch import SwitchEntity
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
+from ...utils.device import get_device_info
+from ...utils.dict import get_in, set_in
 from .const import OUTPUT_TYPE
+from .utils import get_valid_outputs
 
 OUTPUT_TYPE_NAMES = {
     OUTPUT_TYPE.FILTRO: "Filtro",
@@ -21,6 +24,26 @@ for i in range(40, 60):
     OUTPUT_TYPE_NAMES[OUTPUT_TYPE(i)] = f"Interruptor {i - 39}"
 
 
+def get_output_switches(hass, entry, manager, data):
+    device_info = get_device_info(entry, data)
+    output_switches = []
+    for output_key, state in get_valid_outputs(data):
+        output_type = state.get("id")
+        if output_type not in OUTPUT_TYPE_NAMES:
+            continue
+        output_switches.append(
+            OutputSwitch(
+                hass,
+                entry,
+                manager,
+                device_info,
+                output_key,
+                state,
+            )
+        )
+    return output_switches
+
+
 class OutputSwitch(SwitchEntity):
     def __init__(self, hass, entry, manager, device_info, output_key, state):
         self._hass = hass
@@ -37,15 +60,15 @@ class OutputSwitch(SwitchEntity):
     async def async_update(self):
         data = await self._manager.get_status()
         if data:
-            self._state = data["outputs"][self._output_key]
+            self._state = get_in(data, self._output_key)
 
     async def async_turn_on(self):
         self._state["on"] = True
-        await self._manager.set_status({"outputs": {self._output_key: self._state}})
+        await self._manager.set_status(set_in({}, self._output_key, self._state))
 
     async def async_turn_off(self):
         self._state["on"] = False
-        await self._manager.set_status({"outputs": {self._output_key: self._state}})
+        await self._manager.set_status(set_in({}, self._output_key, self._state))
 
     @property
     def is_on(self):
@@ -62,7 +85,7 @@ class OutputSwitch(SwitchEntity):
 
     @property
     def unique_id(self):
-        return f"{DOMAIN}_{self._entry.entry_id}_output_{self._output_key}_switch"
+        return f"{DOMAIN}_{self._entry.entry_id}_output_{self._output_key[-1]}_switch"
 
     @property
     def device_info(self):

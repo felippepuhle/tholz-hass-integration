@@ -9,9 +9,10 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import UnitOfTemperature
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
+from ...utils.device import get_device_info
 from ...utils.dict import get_in, set_in
 from .const import HEATING_TYPE, HEATING_OP_MODE
-from .utils import get_heating_type
+from .utils import get_heating_type, get_valid_heatings
 
 THOLZ_OPMODE_TO_HA_OPMODE = {
     HEATING_OP_MODE.DESLIGADO: STATE_OFF,
@@ -61,6 +62,25 @@ HEATING_WATER_HEATER_CONFIG = {
 def get_heating_water_heater_config(state):
     heating_type = get_heating_type(state)
     return HEATING_WATER_HEATER_CONFIG.get(heating_type)
+
+
+def get_heating_water_heaters(hass, entry, manager, data):
+    device_info = get_device_info(entry, data)
+    heating_switches = []
+    for heating_key, state in get_valid_heatings(data):
+        if get_heating_water_heater_config(state) is None:
+            continue
+        heating_switches.append(
+            HeatingWaterHeater(
+                hass,
+                entry,
+                manager,
+                device_info,
+                heating_key,
+                state,
+            )
+        )
+    return heating_switches
 
 
 class HeatingWaterHeater(WaterHeaterEntity):

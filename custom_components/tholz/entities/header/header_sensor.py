@@ -1,6 +1,7 @@
 from homeassistant.components.sensor import SensorEntity
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
+from ...utils.device import get_device_info
 
 ERROR_TRANSFORM = {
     0: "0: Sem erro ou aviso.",
@@ -52,6 +53,25 @@ HEADER_SENSOR_CONFIG = {
         "icon": "mdi:earth",
     },
 }
+
+
+def get_header_sensors(hass, entry, manager, data):
+    device_info = get_device_info(entry, data)
+    header_sensors = []
+    for sensor_key in HEADER_SENSOR_CONFIG:
+        if data.get(sensor_key) is None:
+            continue
+        header_sensors.append(
+            HeaderSensor(
+                hass,
+                entry,
+                manager,
+                device_info,
+                sensor_key,
+                data,
+            )
+        )
+    return header_sensors
 
 
 class HeaderSensor(SensorEntity):

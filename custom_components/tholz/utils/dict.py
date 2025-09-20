@@ -11,7 +11,7 @@ def get_in(data: dict, path: list, default=None):
 
 def set_in(data: dict, path: list, value):
     if not path:
-        raise ValueError()
+        raise ValueError
     node = reduce(lambda d, k: d.setdefault(k, {}), path[:-1], data)
     node[path[-1]] = value
     return data

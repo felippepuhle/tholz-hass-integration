@@ -1,6 +1,7 @@
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
+from ...utils.device import get_device_info
 
 
 HEADER_BINARY_SENSOR_CONFIG = {
@@ -15,6 +16,25 @@ HEADER_BINARY_SENSOR_CONFIG = {
         "device_class": "problem",
     },
 }
+
+
+def get_header_binary_sensors(hass, entry, manager, data):
+    device_info = get_device_info(entry, data)
+    header_binary_sensors = []
+    for sensor_key in HEADER_BINARY_SENSOR_CONFIG:
+        if data.get(sensor_key) is None:
+            continue
+        header_binary_sensors.append(
+            HeaderBinarySensor(
+                hass,
+                entry,
+                manager,
+                device_info,
+                sensor_key,
+                data,
+            )
+        )
+    return header_binary_sensors
 
 
 class HeaderBinarySensor(BinarySensorEntity):

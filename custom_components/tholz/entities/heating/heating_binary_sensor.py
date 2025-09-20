@@ -1,9 +1,10 @@
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
+from ...utils.device import get_device_info
 from ...utils.dict import get_in
 from .const import HEATING_TYPE
-from .utils import get_heating_type
+from .utils import get_heating_type, get_valid_heatings
 
 
 HEATING_BINARY_SENSOR_CONFIG = {
@@ -19,6 +20,30 @@ HEATING_BINARY_SENSOR_CONFIG = {
 def get_heating_binary_sensor_config(state):
     heating_type = get_heating_type(state)
     return HEATING_BINARY_SENSOR_CONFIG.get(heating_type)
+
+
+def get_heating_binary_sensors(hass, entry, manager, data):
+    device_info = get_device_info(entry, data)
+    heating_binary_sensors = []
+    for heating_key, state in get_valid_heatings(data):
+        config = get_heating_binary_sensor_config(state)
+        if config is None:
+            continue
+        for sensor_key in config:
+            if state.get(sensor_key) is None:
+                continue
+            heating_binary_sensors.append(
+                HeatingBinarySensor(
+                    hass,
+                    entry,
+                    manager,
+                    device_info,
+                    heating_key,
+                    sensor_key,
+                    state,
+                )
+            )
+    return heating_binary_sensors
 
 
 class HeatingBinarySensor(BinarySensorEntity):

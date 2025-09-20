@@ -2,13 +2,12 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfTemperature
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
+from ...utils.device import get_device_info
 from ...utils.dict import get_in
 from .const import HEATING_TYPE
-from .utils import get_heating_type
+from .utils import get_heating_type, get_valid_heatings
 
 
-# A documentação não é explícita quanto a esta configuração.
-# Foram adicionados apenas os sensores validados em testes práticos até o momento.
 HEATING_TEMPERATURE_SENSOR_CONFIG = {
     HEATING_TYPE.SOLAR_PISCINA: {
         "t1": {
@@ -45,6 +44,30 @@ HEATING_TEMPERATURE_SENSOR_CONFIG = {
 def get_heating_temperature_sensor_config(state):
     heating_type = get_heating_type(state)
     return HEATING_TEMPERATURE_SENSOR_CONFIG.get(heating_type)
+
+
+def get_heating_temperature_sensors(hass, entry, manager, data):
+    device_info = get_device_info(entry, data)
+    heating_temperature_sensors = []
+    for heating_key, state in get_valid_heatings(data):
+        config = get_heating_temperature_sensor_config(state)
+        if config is None:
+            continue
+        for sensor_key in config:
+            if state.get(sensor_key) is None:
+                continue
+            heating_temperature_sensors.append(
+                HeatingTemperatureSensor(
+                    hass,
+                    entry,
+                    manager,
+                    device_info,
+                    heating_key,
+                    sensor_key,
+                    state,
+                )
+            )
+    return heating_temperature_sensors
 
 
 class HeatingTemperatureSensor(SensorEntity):

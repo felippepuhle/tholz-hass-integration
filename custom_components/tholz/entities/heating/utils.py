@@ -21,3 +21,27 @@ def heating_has_valid_temperatures(state):
     keys = ["t1", "t2", "t3", "t4", "t5"]
     values = [state.get(k) for k in keys]
     return any(v not in (0, None) for v in values)
+
+
+def get_valid_heatings(data):
+    """
+    Retorna uma lista de aquecimentos válidos.
+
+    Um aquecimento é considerado válido se possuir ao menos uma temperatura válida.
+
+    Cada item do retorno é uma tupla (path, state).
+    """
+    heatings = []
+
+    # formato atual (v2)
+    if "heatings" in data:
+        for heating_key, state in data["heatings"].items():
+            if not heating_has_valid_temperatures(state):
+                continue
+            heatings.append((["heatings", heating_key], state))
+
+    # formato legacy (v1)
+    if "heating" in data and heating_has_valid_temperatures(data["heating"]):
+        heatings.append((["heating"], data["heating"]))
+
+    return heatings

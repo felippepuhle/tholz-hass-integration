@@ -1,12 +1,13 @@
 from homeassistant.components.switch import SwitchEntity
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
+from ...utils.device import get_device_info
 from ...utils.dict import get_in, set_in
 from .const import (
     HEATING_TYPE,
     HEATING_OP_MODE,
 )
-from .utils import get_heating_type
+from .utils import get_heating_type, get_valid_heatings
 
 HEATING_SWITCH_CONFIG = {
     HEATING_TYPE.SOLAR_RESIDENCIAL: {
@@ -48,6 +49,25 @@ HEATING_SWITCH_CONFIG = {
 def get_heating_switch_config(state):
     heating_type = get_heating_type(state)
     return HEATING_SWITCH_CONFIG.get(heating_type)
+
+
+def get_heating_switches(hass, entry, manager, data):
+    device_info = get_device_info(entry, data)
+    heating_switches = []
+    for heating_key, state in get_valid_heatings(data):
+        if get_heating_switch_config(state) is None:
+            continue
+        heating_switches.append(
+            HeatingSwitch(
+                hass,
+                entry,
+                manager,
+                device_info,
+                heating_key,
+                state,
+            )
+        )
+    return heating_switches
 
 
 class HeatingSwitch(SwitchEntity):
