@@ -1,24 +1,14 @@
 from homeassistant.components.switch import SwitchEntity
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
+from ...utils.dict import get_in, set_in
 from .const import (
     HEATING_TYPE,
     HEATING_OP_MODE,
 )
+from .utils import get_heating_type
 
 HEATING_SWITCH_CONFIG = {
-    HEATING_TYPE.SOLAR_PISCINA: {
-        "name": "Solar",
-        "icon": "mdi:weather-sunset",
-    },
-    HEATING_TYPE.TROCADOR_CALOR_PISCINA: {
-        "name": "Trocador de Calor",
-        "icon": "mdi:heat-pump",
-    },
-    HEATING_TYPE.ELETRICO_PISCINA: {
-        "name": "Elétrico",
-        "icon": "mdi:radiator",
-    },
     HEATING_TYPE.SOLAR_RESIDENCIAL: {
         "name": "Solar",
         "icon": "mdi:weather-sunset",
@@ -55,6 +45,11 @@ HEATING_SWITCH_CONFIG = {
 }
 
 
+def get_heating_switch_config(state):
+    heating_type = get_heating_type(state)
+    return HEATING_SWITCH_CONFIG.get(heating_type)
+
+
 class HeatingSwitch(SwitchEntity):
     def __init__(self, hass, entry, manager, device_info, heating_key, state):
         self._hass = hass
@@ -71,25 +66,25 @@ class HeatingSwitch(SwitchEntity):
     async def async_update(self):
         data = await self._manager.get_status()
         if data:
-            self._state = data["heatings"][self._heating_key]
+            self._state = get_in(data, self._heating_key)
 
     async def async_turn_on(self):
-        self._state["on"] = True
+        config = get_heating_switch_config(self._state)
 
-        config = HEATING_SWITCH_CONFIG[self._state.get("type")]
+        self._state["on"] = True
         if "opMode" in config:
             self._state["opMode"] = config["opMode"]["on"]
 
-        await self._manager.set_status({"heatings": {self._heating_key: self._state}})
+        await self._manager.set_status(set_in({}, self._heating_key, self._state))
 
     async def async_turn_off(self):
-        self._state["on"] = False
+        config = get_heating_switch_config(self._state)
 
-        config = HEATING_SWITCH_CONFIG[self._state.get("type")]
+        self._state["on"] = False
         if "opMode" in config:
             self._state["opMode"] = config["opMode"]["off"]
 
-        await self._manager.set_status({"heatings": {self._heating_key: self._state}})
+        await self._manager.set_status(set_in({}, self._heating_key, self._state))
 
     @property
     def is_on(self):
@@ -97,17 +92,17 @@ class HeatingSwitch(SwitchEntity):
 
     @property
     def name(self):
-        config = HEATING_SWITCH_CONFIG[self._state.get("type")]
+        config = get_heating_switch_config(self._state)
         return f"{self._entry.data.get(CONF_NAME_KEY)} {config['name']}"
 
     @property
     def icon(self):
-        config = HEATING_SWITCH_CONFIG[self._state.get("type")]
+        config = get_heating_switch_config(self._state)
         return config["icon"]
 
     @property
     def unique_id(self):
-        return f"{DOMAIN}_{self._entry.entry_id}_heating_{self._heating_key}_switch"
+        return f"{DOMAIN}_{self._entry.entry_id}_heating_{self._heating_key[-1]}_switch"
 
     @property
     def device_info(self):

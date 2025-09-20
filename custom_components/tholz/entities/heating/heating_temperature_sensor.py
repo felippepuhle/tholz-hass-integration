@@ -2,7 +2,9 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfTemperature
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
+from ...utils.dict import get_in
 from .const import HEATING_TYPE
+from .utils import get_heating_type
 
 
 # A documentação não é explícita quanto a esta configuração.
@@ -40,6 +42,11 @@ HEATING_TEMPERATURE_SENSOR_CONFIG = {
 }
 
 
+def get_heating_temperature_sensor_config(state):
+    heating_type = get_heating_type(state)
+    return HEATING_TEMPERATURE_SENSOR_CONFIG.get(heating_type)
+
+
 class HeatingTemperatureSensor(SensorEntity):
     def __init__(
         self, hass, entry, manager, device_info, heating_key, sensor_key, state
@@ -60,7 +67,7 @@ class HeatingTemperatureSensor(SensorEntity):
     async def async_update(self):
         data = await self._manager.get_status()
         if data:
-            self._state = data["heatings"][self._heating_key]
+            self._state = get_in(data, self._heating_key)
 
     @property
     def state(self):
@@ -73,9 +80,7 @@ class HeatingTemperatureSensor(SensorEntity):
 
     @property
     def name(self):
-        config = HEATING_TEMPERATURE_SENSOR_CONFIG[self._state.get("type")][
-            self._sensor_key
-        ]
+        config = get_heating_temperature_sensor_config(self._state)[self._sensor_key]
         return f"{self._entry.data.get(CONF_NAME_KEY)} {config['name']}"
 
     @property
@@ -84,7 +89,7 @@ class HeatingTemperatureSensor(SensorEntity):
 
     @property
     def unique_id(self):
-        return f"{DOMAIN}_{self._entry.entry_id}_heating_{self._heating_key}_{self._sensor_key}_temperature"
+        return f"{DOMAIN}_{self._entry.entry_id}_heating_{self._heating_key[-1]}_{self._sensor_key}_temperature"
 
     @property
     def device_info(self):

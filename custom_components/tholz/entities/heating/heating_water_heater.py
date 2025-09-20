@@ -9,7 +9,9 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import UnitOfTemperature
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
+from ...utils.dict import get_in, set_in
 from .const import HEATING_TYPE, HEATING_OP_MODE
+from .utils import get_heating_type
 
 THOLZ_OPMODE_TO_HA_OPMODE = {
     HEATING_OP_MODE.DESLIGADO: STATE_OFF,
@@ -56,6 +58,11 @@ HEATING_WATER_HEATER_CONFIG = {
 }
 
 
+def get_heating_water_heater_config(state):
+    heating_type = get_heating_type(state)
+    return HEATING_WATER_HEATER_CONFIG.get(heating_type)
+
+
 class HeatingWaterHeater(WaterHeaterEntity):
     def __init__(self, hass, entry, manager, device_info, heating_key, state):
         self._hass = hass
@@ -72,15 +79,15 @@ class HeatingWaterHeater(WaterHeaterEntity):
     async def async_update(self):
         data = await self._manager.get_status()
         if data:
-            self._state = data["heatings"][self._heating_key]
+            self._state = get_in(data, self._heating_key)
 
     async def async_set_temperature(self, **kwargs):
         self._state["sp"] = int(kwargs.get("temperature") * 10)
-        await self._manager.set_status({"heatings": {self._heating_key: self._state}})
+        await self._manager.set_status(set_in({}, self._heating_key, self._state))
 
     async def async_set_operation_mode(self, operation_mode):
         self._state["opMode"] = HA_OPMODE_TO_THOLZ_OPMODE[operation_mode]
-        await self._manager.set_status({"heatings": {self._heating_key: self._state}})
+        await self._manager.set_status(set_in({}, self._heating_key, self._state))
 
     @property
     def temperature_unit(self):
@@ -88,7 +95,7 @@ class HeatingWaterHeater(WaterHeaterEntity):
 
     @property
     def current_temperature(self):
-        config = HEATING_WATER_HEATER_CONFIG[self._state.get("type")]
+        config = get_heating_water_heater_config(self._state)
         sensor_key = config["sensor_key"]
         if self._state.get(sensor_key) is not None:
             return self._state.get(sensor_key) / 10
@@ -119,7 +126,7 @@ class HeatingWaterHeater(WaterHeaterEntity):
 
     @property
     def operation_list(self):
-        config = HEATING_WATER_HEATER_CONFIG[self._state.get("type")]
+        config = get_heating_water_heater_config(self._state)
         return config["operation_list"]
 
     @property
@@ -131,19 +138,17 @@ class HeatingWaterHeater(WaterHeaterEntity):
 
     @property
     def name(self):
-        config = HEATING_WATER_HEATER_CONFIG[self._state.get("type")]
+        config = get_heating_water_heater_config(self._state)
         return f"{self._entry.data.get(CONF_NAME_KEY)} {config['name']}"
 
     @property
     def icon(self):
-        config = HEATING_WATER_HEATER_CONFIG[self._state.get("type")]
+        config = get_heating_water_heater_config(self._state)
         return config["icon"]
 
     @property
     def unique_id(self):
-        return (
-            f"{DOMAIN}_{self._entry.entry_id}_heating_{self._heating_key}_water_heater"
-        )
+        return f"{DOMAIN}_{self._entry.entry_id}_heating_{self._heating_key[-1]}_water_heater"
 
     @property
     def device_info(self):

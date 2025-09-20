@@ -1,4 +1,5 @@
-from .entities.heating.heating_switch import HEATING_SWITCH_CONFIG, HeatingSwitch
+from .entities.heating.heating_switch import get_heating_switch_config, HeatingSwitch
+from .entities.heating.utils import heating_has_valid_temperatures
 from .entities.output.output_switch import OUTPUT_TYPE_NAMES, OutputSwitch
 from .utils.const import DOMAIN
 from .utils.device import get_device_info
@@ -15,8 +16,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     if "heatings" in data:
         for heating_key, state in data["heatings"].items():
-            heating_type = state.get("type")
-            if heating_type not in HEATING_SWITCH_CONFIG:
+            config = get_heating_switch_config(state)
+            if config is None or not heating_has_valid_temperatures(state):
                 continue
 
             entities.append(
@@ -25,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     entry,
                     manager,
                     device_info,
-                    heating_key,
+                    ["heatings", heating_key],
                     state,
                 )
             )

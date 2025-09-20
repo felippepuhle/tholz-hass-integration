@@ -1,7 +1,8 @@
 from .entities.heating.heating_water_heater import (
-    HEATING_WATER_HEATER_CONFIG,
+    get_heating_water_heater_config,
     HeatingWaterHeater,
 )
+from .entities.heating.utils import heating_has_valid_temperatures
 from .utils.const import DOMAIN
 from .utils.device import get_device_info
 
@@ -17,8 +18,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     if "heatings" in data:
         for heating_key, state in data["heatings"].items():
-            heating_type = state.get("type")
-            if heating_type not in HEATING_WATER_HEATER_CONFIG:
+            config = get_heating_water_heater_config(state)
+            if config is None or not heating_has_valid_temperatures(state):
                 continue
 
             entities.append(
@@ -27,7 +28,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     entry,
                     manager,
                     device_info,
-                    heating_key,
+                    ["heatings", heating_key],
                     state,
                 )
             )

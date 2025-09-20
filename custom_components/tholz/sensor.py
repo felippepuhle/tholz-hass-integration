@@ -3,9 +3,10 @@ from .entities.header.header_sensor import (
     HeaderSensor,
 )
 from .entities.heating.heating_temperature_sensor import (
-    HEATING_TEMPERATURE_SENSOR_CONFIG,
+    get_heating_temperature_sensor_config,
     HeatingTemperatureSensor,
 )
+from .entities.heating.utils import heating_has_valid_temperatures
 from .utils.const import DOMAIN
 from .utils.device import get_device_info
 
@@ -35,11 +36,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
     if "heatings" in data:
         for heating_key, state in data["heatings"].items():
-            heating_type = state.get("type")
-            if heating_type not in HEATING_TEMPERATURE_SENSOR_CONFIG:
+            config = get_heating_temperature_sensor_config(state)
+            if config is None or not heating_has_valid_temperatures(state):
                 continue
 
-            for sensor_key in HEATING_TEMPERATURE_SENSOR_CONFIG[heating_type]:
+            for sensor_key in config:
                 if state.get(sensor_key) is None:
                     continue
 
@@ -49,7 +50,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                         entry,
                         manager,
                         device_info,
-                        heating_key,
+                        ["heatings", heating_key],
                         sensor_key,
                         state,
                     )
