@@ -15,7 +15,7 @@ This custom integration provides control and monitoring for **Tholz Smart device
 - **Water Heater Control** (heating entities)  
 - **Pump Controls** (switch entities)  
 
-> ⚠️ Some entities, such as lights, are still under development and will be added in future updates.
+> ⚠️ Some entities are still under development and will be added in future updates.
 
 ## Installation
 
