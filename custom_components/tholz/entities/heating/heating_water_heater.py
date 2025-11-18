@@ -50,6 +50,12 @@ HEATING_WATER_HEATER_CONFIG = {
         "name": "Boiler",
         "icon": "mdi:water-boiler",
     },
+    HEATING_TYPE.TROCADOR_CALOR_FAIRLAND: {
+        "sensor_key": "t3",
+        "operation_list": [STATE_OFF, STATE_PERFORMANCE],
+        "name": "Piscina",
+        "icon": "mdi:pool-thermometer",
+    },
     HEATING_TYPE.TERMOSTATO: {
         "sensor_key": "t1",
         "operation_list": [STATE_OFF, STATE_PERFORMANCE, STATE_HEAT_PUMP],

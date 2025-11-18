@@ -14,6 +14,24 @@ HEATING_BINARY_SENSOR_CONFIG = {
             "icon": "mdi:weather-sunset",
         }
     },
+    HEATING_TYPE.TROCADOR_CALOR_PISCINA: {
+        "on": {
+            "name": "Trocador de Calor",
+            "icon": "mdi:heat-pump-outline",
+        }
+    },
+    HEATING_TYPE.SOLAR_RESIDENCIAL: {
+        "on": {
+            "name": "Solar",
+            "icon": "mdi:weather-sunset",
+        }
+    },
+    HEATING_TYPE.TROCADOR_CALOR_FAIRLAND: {
+        "on": {
+            "name": "Trocador de Calor",
+            "icon": "mdi:heat-pump-outline",
+        }
+    },
 }
 
 

@@ -17,6 +17,11 @@ HEATING_TEMPERATURE_SENSOR_CONFIG = {
             "name": "Temperatura Piscina",
         },
     },
+    HEATING_TYPE.TROCADOR_CALOR_PISCINA: {
+        "t2": {
+            "name": "Temperatura Piscina",
+        },
+    },
     HEATING_TYPE.SOLAR_RESIDENCIAL: {
         "t1": {
             "name": "Temperatura Coletor",
@@ -31,6 +36,17 @@ HEATING_TEMPERATURE_SENSOR_CONFIG = {
     HEATING_TYPE.RECIRCULACAO_BARRILETE: {
         "t4": {
             "name": "Temperatura Recirculação",
+        },
+    },
+    HEATING_TYPE.TROCADOR_CALOR_FAIRLAND: {
+        "t1": {
+            "name": "Temperatura Ambiente",
+        },
+        "t2": {
+            "name": "Temperatura Saída",
+        },
+        "t3": {
+            "name": "Temperatura Entrada",
         },
     },
     HEATING_TYPE.TERMOSTATO: {
