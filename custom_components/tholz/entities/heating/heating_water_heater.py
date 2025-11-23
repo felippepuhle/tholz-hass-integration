@@ -19,6 +19,7 @@ THOLZ_OPMODE_TO_HA_OPMODE = {
     HEATING_OP_MODE.LIGADO: STATE_PERFORMANCE,
     HEATING_OP_MODE.AUTOMATICO: STATE_HEAT_PUMP,
     HEATING_OP_MODE.ECONOMICO: STATE_ECO,
+    HEATING_OP_MODE.AQUECER: STATE_HEAT_PUMP,
 }
 
 HA_OPMODE_TO_THOLZ_OPMODE = {
@@ -52,7 +53,7 @@ HEATING_WATER_HEATER_CONFIG = {
     },
     HEATING_TYPE.TROCADOR_CALOR_FAIRLAND: {
         "sensor_key": "t3",
-        "operation_list": [STATE_OFF, STATE_PERFORMANCE],
+        "operation_list": [STATE_OFF, STATE_HEAT_PUMP],
         "name": "Piscina",
         "icon": "mdi:pool-thermometer",
     },
