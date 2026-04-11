@@ -14,54 +14,67 @@ from ...utils.dict import get_in, set_in
 from .const import HEATING_TYPE, HEATING_OP_MODE
 from .utils import get_heating_type, get_valid_heatings
 
-THOLZ_OPMODE_TO_HA_OPMODE = {
-    HEATING_OP_MODE.DESLIGADO: STATE_OFF,
-    HEATING_OP_MODE.LIGADO: STATE_PERFORMANCE,
-    HEATING_OP_MODE.AUTOMATICO: STATE_HEAT_PUMP,
-    HEATING_OP_MODE.ECONOMICO: STATE_ECO,
-    HEATING_OP_MODE.AQUECER: STATE_HEAT_PUMP,
-}
-
-HA_OPMODE_TO_THOLZ_OPMODE = {
-    ha: tholz for tholz, ha in THOLZ_OPMODE_TO_HA_OPMODE.items()
-}
 
 HEATING_WATER_HEATER_CONFIG = {
     HEATING_TYPE.SOLAR_PISCINA: {
         "sensor_key": "t2",
-        "operation_list": [STATE_OFF, STATE_PERFORMANCE, STATE_HEAT_PUMP],
         "name": "Piscina",
         "icon": "mdi:pool-thermometer",
+        "tholz_to_ha_opmode": {
+            HEATING_OP_MODE.DESLIGADO: STATE_OFF,
+            HEATING_OP_MODE.LIGADO: STATE_PERFORMANCE,
+            HEATING_OP_MODE.AUTOMATICO: STATE_HEAT_PUMP,
+        },
     },
     HEATING_TYPE.TROCADOR_CALOR_PISCINA: {
         "sensor_key": "t2",
-        "operation_list": [STATE_OFF, STATE_PERFORMANCE, STATE_HEAT_PUMP],
         "name": "Piscina",
         "icon": "mdi:pool-thermometer",
+        "tholz_to_ha_opmode": {
+            HEATING_OP_MODE.DESLIGADO: STATE_OFF,
+            HEATING_OP_MODE.LIGADO: STATE_PERFORMANCE,
+            HEATING_OP_MODE.AUTOMATICO: STATE_HEAT_PUMP,
+        },
     },
     HEATING_TYPE.ELETRICO_PISCINA: {
         "sensor_key": "t2",
-        "operation_list": [STATE_OFF, STATE_PERFORMANCE, STATE_HEAT_PUMP],
         "name": "Piscina",
         "icon": "mdi:pool-thermometer",
+        "tholz_to_ha_opmode": {
+            HEATING_OP_MODE.DESLIGADO: STATE_OFF,
+            HEATING_OP_MODE.LIGADO: STATE_PERFORMANCE,
+            HEATING_OP_MODE.AUTOMATICO: STATE_HEAT_PUMP,
+        },
     },
     HEATING_TYPE.SOLAR_RESIDENCIAL: {
         "sensor_key": "t3",
-        "operation_list": [STATE_OFF, STATE_PERFORMANCE, STATE_HEAT_PUMP, STATE_ECO],
         "name": "Boiler",
         "icon": "mdi:water-boiler",
+        "tholz_to_ha_opmode": {
+            HEATING_OP_MODE.DESLIGADO: STATE_OFF,
+            HEATING_OP_MODE.LIGADO: STATE_PERFORMANCE,
+            HEATING_OP_MODE.AUTOMATICO: STATE_HEAT_PUMP,
+            HEATING_OP_MODE.ECONOMICO: STATE_ECO,
+        },
     },
     HEATING_TYPE.TROCADOR_CALOR_FAIRLAND: {
         "sensor_key": "t3",
-        "operation_list": [STATE_OFF, STATE_HEAT_PUMP],
         "name": "Piscina",
         "icon": "mdi:pool-thermometer",
+        "tholz_to_ha_opmode": {
+            HEATING_OP_MODE.DESLIGADO: STATE_OFF,
+            HEATING_OP_MODE.AQUECER: STATE_HEAT_PUMP,
+        },
     },
     HEATING_TYPE.TERMOSTATO: {
         "sensor_key": "t1",
-        "operation_list": [STATE_OFF, STATE_PERFORMANCE, STATE_HEAT_PUMP],
         "name": "Boiler",
         "icon": "mdi:water-boiler",
+        "tholz_to_ha_opmode": {
+            HEATING_OP_MODE.DESLIGADO: STATE_OFF,
+            HEATING_OP_MODE.LIGADO: STATE_PERFORMANCE,
+            HEATING_OP_MODE.AUTOMATICO: STATE_HEAT_PUMP,
+        },
     },
 }
 
@@ -71,13 +84,30 @@ def get_heating_water_heater_config(state):
     return HEATING_WATER_HEATER_CONFIG.get(heating_type)
 
 
+def get_opmode_maps(state):
+    config = get_heating_water_heater_config(state)
+    if not config:
+        return {}, {}
+
+    tholz_to_ha_opmode = config.get("tholz_to_ha_opmode", {})
+
+    ha_to_tholz_opmode = {}
+    for tholz, ha in tholz_to_ha_opmode.items():
+        if ha not in ha_to_tholz_opmode:
+            ha_to_tholz_opmode[ha] = tholz
+
+    return tholz_to_ha_opmode, ha_to_tholz_opmode
+
+
 def get_heating_water_heaters(hass, entry, manager, data):
     device_info = get_device_info(entry, data)
-    heating_switches = []
+    heating_water_heaters = []
+
     for heating_key, state in get_valid_heatings(data):
         if get_heating_water_heater_config(state) is None:
             continue
-        heating_switches.append(
+
+        heating_water_heaters.append(
             HeatingWaterHeater(
                 hass,
                 entry,
@@ -87,7 +117,8 @@ def get_heating_water_heaters(hass, entry, manager, data):
                 state,
             )
         )
-    return heating_switches
+
+    return heating_water_heaters
 
 
 class HeatingWaterHeater(WaterHeaterEntity):
@@ -113,7 +144,12 @@ class HeatingWaterHeater(WaterHeaterEntity):
         await self._manager.set_status(set_in({}, self._heating_key, self._state))
 
     async def async_set_operation_mode(self, operation_mode):
-        self._state["opMode"] = HA_OPMODE_TO_THOLZ_OPMODE[operation_mode]
+        _, ha_to_tholz_opmode = get_opmode_maps(self._state)
+
+        if operation_mode not in ha_to_tholz_opmode:
+            return
+
+        self._state["opMode"] = ha_to_tholz_opmode[operation_mode]
         await self._manager.set_status(set_in({}, self._heating_key, self._state))
 
     @property
@@ -149,12 +185,13 @@ class HeatingWaterHeater(WaterHeaterEntity):
 
     @property
     def current_operation(self):
-        return THOLZ_OPMODE_TO_HA_OPMODE[self._state.get("opMode", 0)]
+        tholz_to_ha_opmode, _ = get_opmode_maps(self._state)
+        return tholz_to_ha_opmode.get(self._state.get("opMode"), STATE_OFF)
 
     @property
     def operation_list(self):
-        config = get_heating_water_heater_config(self._state)
-        return config["operation_list"]
+        tholz_to_ha_opmode, _ = get_opmode_maps(self._state)
+        return list(dict.fromkeys(tholz_to_ha_opmode.values()))
 
     @property
     def supported_features(self):
