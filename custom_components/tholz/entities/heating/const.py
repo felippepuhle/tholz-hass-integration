@@ -22,3 +22,8 @@ class HEATING_OP_MODE(IntEnum):
     ECONOMICO = 3
     AQUECER = 4
     RESFRIAR = 5
+
+
+class HEATING_FAN_MODE(IntEnum):
+    SILENCIOSO = 0
+    INTELIGENTE = 1

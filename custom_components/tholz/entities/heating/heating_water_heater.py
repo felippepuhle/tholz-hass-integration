@@ -61,6 +61,8 @@ HEATING_WATER_HEATER_CONFIG = {
         "sensor_key": "t3",
         "name": "Piscina",
         "icon": "mdi:pool-thermometer",
+        "min_temp": 18.0,
+        "max_temp": 40.0,
         "tholz_to_ha_opmode": {
             HEATING_OP_MODE.DESLIGADO: STATE_OFF,
             HEATING_OP_MODE.AQUECER: STATE_HEAT_PUMP,
@@ -175,13 +177,23 @@ class HeatingWaterHeater(WaterHeaterEntity):
 
     @property
     def min_temp(self):
+        config = get_heating_water_heater_config(self._state)
         min_sp = self._state.get("minSp")
-        return min_sp / 10 if min_sp is not None else 40.0
+        if min_sp is not None:
+            return min_sp / 10
+        if config.get("min_temp") is not None:
+            return config["min_temp"]
+        return 40.0
 
     @property
     def max_temp(self):
+        config = get_heating_water_heater_config(self._state)
         max_sp = self._state.get("maxSp")
-        return max_sp / 10 if max_sp is not None else 70.0
+        if max_sp is not None:
+            return max_sp / 10
+        if config.get("max_temp") is not None:
+            return config["max_temp"]
+        return 70.0
 
     @property
     def current_operation(self):
