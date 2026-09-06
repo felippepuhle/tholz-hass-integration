@@ -39,12 +39,12 @@ class TholzConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(config_entry):
-        return TholzConfigFlowOptionsFlowHandler(config_entry)
+        return TholzConfigFlowOptionsFlowHandler()
 
 
 class TholzConfigFlowOptionsFlowHandler(config_entries.OptionsFlow):
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
+    # config_entry is provided by Home Assistant and is read-only. Assigning it
+    # here raises AttributeError on current releases.
 
     async def async_step_init(self, user_input=None):
         if user_input is not None:
