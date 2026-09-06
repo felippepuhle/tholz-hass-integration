@@ -1,7 +1,10 @@
 import asyncio
+import logging
 from datetime import datetime
 
 from .client import TholzSocketClient
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TholzSocketClientManager:
@@ -17,14 +20,40 @@ class TholzSocketClientManager:
         if self._task is None:
             self._task = hass.loop.create_task(self._updater())
 
+    async def stop(self):
+        """Cancel the polling task.
+
+        Without this the task outlives the config entry, so reloading or
+        removing the integration leaves an extra poller running against the
+        controller for the lifetime of the process.
+        """
+        if self._task is None:
+            return
+
+        self._task.cancel()
+        try:
+            await self._task
+        except asyncio.CancelledError:
+            pass
+        finally:
+            self._task = None
+
     async def _fetch_data(self):
         self._data = await asyncio.to_thread(self._client.get_status)
         self._last_update = datetime.now()
 
     async def _updater(self):
         while True:
-            async with self._lock:
-                await self._fetch_data()
+            try:
+                async with self._lock:
+                    await self._fetch_data()
+            except asyncio.CancelledError:
+                raise
+            except Exception:  # noqa: BLE001
+                # Keep polling. An unhandled error here would end the task and
+                # silently stop every update until Home Assistant restarts.
+                _LOGGER.exception("unexpected error while polling the controller")
+
             await asyncio.sleep(self._polling_interval)
 
     async def get_status(self):
