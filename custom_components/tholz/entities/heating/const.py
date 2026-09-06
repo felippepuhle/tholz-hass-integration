@@ -27,3 +27,11 @@ class HEATING_OP_MODE(IntEnum):
 class HEATING_FAN_MODE(IntEnum):
     SILENCIOSO = 0
     INTELIGENTE = 1
+
+
+# Circuitos acionados por resistência elétrica. Só estes recebem sensores de
+# consumo, e só quando a potência da resistência é informada nas opções.
+ELECTRIC_HEATING_TYPES = {
+    HEATING_TYPE.ELETRICO_PISCINA,
+    HEATING_TYPE.APOIO_ELETRICO,
+}

@@ -27,6 +27,11 @@ class TholzSocketClientManager:
                 await self._fetch_data()
             await asyncio.sleep(self._polling_interval)
 
+    @property
+    def last_data(self):
+        """Último payload lido, sem disparar uma nova leitura."""
+        return self._data
+
     async def get_status(self):
         async with self._lock:
             if self._data is None:
