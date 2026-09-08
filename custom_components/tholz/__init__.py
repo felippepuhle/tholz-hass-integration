@@ -35,6 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "manager": manager,
     }
 
+    # Reload on option changes, so editing the element rating takes effect
+    # without restarting Home Assistant.
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
+
     await hass.config_entries.async_forward_entry_setups(
         entry,
         [
@@ -49,3 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     return True
+
+
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
+    await hass.config_entries.async_reload(entry.entry_id)

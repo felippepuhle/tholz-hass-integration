@@ -1,6 +1,8 @@
 from homeassistant import config_entries
 import voluptuous as vol
 
+from .entities.heating.const import ELECTRIC_HEATING_TYPES
+from .entities.heating.utils import get_heating_type, get_valid_heatings
 from .utils.const import (
     DOMAIN,
     CONF_NAME_KEY,
@@ -9,7 +11,38 @@ from .utils.const import (
     CONF_PORT_DEFAULT_VALUE,
     CONF_POLLING_INTERVAL_KEY,
     CONF_POLLING_INTERVAL_DEFAULT_VALUE,
+    CONF_ELECTRIC_POWER_PREFIX,
+    CONF_ELECTRIC_POWER_DEFAULT_VALUE,
 )
+
+
+def get_electric_power_schema(hass, config_entry):
+    """One power field per heating circuit driven by an electric element.
+
+    The controller does not report the element rating, so it is declared here.
+    Zero keeps the consumption sensors disabled.
+    """
+    stored = hass.data.get(DOMAIN, {}).get(config_entry.entry_id)
+    if not stored:
+        return {}
+
+    data = stored["manager"].last_data
+    if not data:
+        return {}
+
+    options = config_entry.options or {}
+    schema = {}
+    for heating_key, state in get_valid_heatings(data):
+        if get_heating_type(state) not in ELECTRIC_HEATING_TYPES:
+            continue
+        option = f"{CONF_ELECTRIC_POWER_PREFIX}{heating_key[-1]}"
+        schema[
+            vol.Optional(
+                option,
+                default=options.get(option, CONF_ELECTRIC_POWER_DEFAULT_VALUE),
+            )
+        ] = int
+    return schema
 
 
 class TholzConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -76,6 +109,7 @@ class TholzConfigFlowOptionsFlowHandler(config_entries.OptionsFlow):
                             current_data.get(CONF_POLLING_INTERVAL_KEY),
                         ),
                     ): int,
+                    **get_electric_power_schema(self.hass, self.config_entry),
                 }
             ),
         )
