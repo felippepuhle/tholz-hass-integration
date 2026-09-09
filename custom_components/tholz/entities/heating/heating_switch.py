@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from homeassistant.components.switch import SwitchEntity
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
@@ -42,6 +44,8 @@ HEATING_SWITCH_CONFIG = {
     HEATING_TYPE.TERMOSTATO: {
         "name": "Termostato",
         "icon": "mdi:thermometer",
+        "opMode": {"off": HEATING_OP_MODE.DESLIGADO, "on": HEATING_OP_MODE.LIGADO},
+        "onAut": {"off": False, "on": False},
     },
 }
 
@@ -89,22 +93,24 @@ class HeatingSwitch(SwitchEntity):
             self._state = get_in(data, self._heating_key)
 
     async def async_turn_on(self):
-        config = get_heating_switch_config(self._state)
-
-        self._state["on"] = True
-        if "opMode" in config:
-            self._state["opMode"] = config["opMode"]["on"]
-
-        await self._manager.set_status(set_in({}, self._heating_key, self._state))
+        await self._async_set_on(True)
 
     async def async_turn_off(self):
+        await self._async_set_on(False)
+
+    async def _async_set_on(self, on):
         config = get_heating_switch_config(self._state)
+        state = deepcopy(self._state)
 
-        self._state["on"] = False
+        state["on"] = on
         if "opMode" in config:
-            self._state["opMode"] = config["opMode"]["off"]
+            state["opMode"] = config["opMode"]["on" if on else "off"]
+        if "onAut" in config:
+            state["onAut"] = config["onAut"]["on" if on else "off"]
 
-        await self._manager.set_status(set_in({}, self._heating_key, self._state))
+        data = await self._manager.set_status(set_in({}, self._heating_key, state))
+        if data and isinstance(data, dict):
+            self._state = get_in(data, self._heating_key, self._state)
 
     @property
     def is_on(self):
