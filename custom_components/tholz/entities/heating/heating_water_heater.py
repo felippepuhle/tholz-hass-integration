@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
@@ -77,6 +79,11 @@ HEATING_WATER_HEATER_CONFIG = {
             HEATING_OP_MODE.LIGADO: STATE_PERFORMANCE,
             HEATING_OP_MODE.AUTOMATICO: STATE_HEAT_PUMP,
         },
+        "operation_state": {
+            STATE_OFF: {"on": False, "onAut": False},
+            STATE_PERFORMANCE: {"on": True, "onAut": False},
+            STATE_HEAT_PUMP: {"on": True, "onAut": True},
+        },
     },
 }
 
@@ -146,13 +153,19 @@ class HeatingWaterHeater(WaterHeaterEntity):
         await self._manager.set_status(set_in({}, self._heating_key, self._state))
 
     async def async_set_operation_mode(self, operation_mode):
+        config = get_heating_water_heater_config(self._state)
         _, ha_to_tholz_opmode = get_opmode_maps(self._state)
 
         if operation_mode not in ha_to_tholz_opmode:
             return
 
-        self._state["opMode"] = ha_to_tholz_opmode[operation_mode]
-        await self._manager.set_status(set_in({}, self._heating_key, self._state))
+        state = deepcopy(self._state)
+        state["opMode"] = ha_to_tholz_opmode[operation_mode]
+        state.update(config.get("operation_state", {}).get(operation_mode, {}))
+
+        data = await self._manager.set_status(set_in({}, self._heating_key, state))
+        if data and isinstance(data, dict):
+            self._state = get_in(data, self._heating_key, self._state)
 
     @property
     def temperature_unit(self):
