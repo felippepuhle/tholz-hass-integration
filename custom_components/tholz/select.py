@@ -1,4 +1,5 @@
 from .entities.heating.heating_fan_mode_select import get_heating_fan_mode_selects
+from .entities.monitor.monitor_op_mode_select import get_monitor_op_mode_selects
 from .utils.const import DOMAIN
 
 
@@ -10,6 +11,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = [
         *get_heating_fan_mode_selects(hass, entry, manager, data),
+        *get_monitor_op_mode_selects(hass, entry, manager, data),
     ]
 
     async_add_entities(entities, update_before_add=True)
