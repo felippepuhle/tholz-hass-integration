@@ -12,6 +12,7 @@ ignore = [
     "D203", # no-blank-line-before-class (incompatible with formatter)
     "D212", # multi-line-summary-first-line (incompatible with formatter)
     "COM812", # incompatible with formatter
+    "CPY001", # project files do not use copyright notices
     "ISC001", # incompatible with formatter
     # custom: bypass initial implementation errors
     # no time to refactor, so keeping it simple for now.
@@ -35,6 +36,7 @@ ignore = [
     "N801",
     "PERF401",
     "PLR0913",
+    "PLR0917", # entity constructors require Home Assistant setup context
     "TID252",
 ]
 
