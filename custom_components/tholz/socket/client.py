@@ -5,6 +5,21 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 
+def _recv_json(sock):
+    """Acumula pacotes até formar um JSON completo (a resposta pode vir fragmentada)."""
+    buf = b""
+    while True:
+        chunk = sock.recv(8192)
+        if not chunk:
+            break
+        buf += chunk
+        try:
+            return json.loads(buf.decode())
+        except ValueError:
+            continue
+    return json.loads(buf.decode())
+
+
 class TholzSocketClient:
     def __init__(self, host: str, port: int):
         self.host = host
@@ -18,8 +33,7 @@ class TholzSocketClient:
                 _LOGGER.debug("[get_status] call: %s", msg)
 
                 s.sendall(json.dumps(msg).encode())
-                data = s.recv(8192)
-                decoded = json.loads(data.decode())
+                decoded = _recv_json(s)
 
                 self.last_data = decoded.get("response")
                 _LOGGER.debug("[get_status] data: %s", self.last_data)
@@ -35,8 +49,7 @@ class TholzSocketClient:
                 _LOGGER.debug("[set_status] call: %s", msg)
 
                 s.sendall(json.dumps(msg).encode())
-                data = s.recv(8192)
-                decoded = json.loads(data.decode())
+                decoded = _recv_json(s)
 
                 self.last_data = decoded.get("response")
                 _LOGGER.debug("[set_status] data: %s", self.last_data)
