@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Entity setup assumes a populated payload, so an unreachable controller
     # would otherwise raise while the config flow is still running.
     if await manager.get_status() is None:
-        raise ConfigEntryNotReady(f"no reply from the controller at {host}:{port}")
+        raise ConfigEntryNotReady
 
     manager.start(hass)
 
