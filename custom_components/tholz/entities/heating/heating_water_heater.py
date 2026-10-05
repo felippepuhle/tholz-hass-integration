@@ -149,10 +149,16 @@ class HeatingWaterHeater(WaterHeaterEntity):
             self._state = get_in(data, self._heating_key)
 
     async def async_set_temperature(self, **kwargs):
+        data = await self._manager.get_status()
+        self._state = get_in(data, self._heating_key)
+
         self._state["sp"] = int(kwargs.get("temperature") * 10)
         await self._manager.set_status(set_in({}, self._heating_key, self._state))
 
     async def async_set_operation_mode(self, operation_mode):
+        data = await self._manager.get_status()
+        self._state = get_in(data, self._heating_key)
+
         config = get_heating_water_heater_config(self._state)
         _, ha_to_tholz_opmode = get_opmode_maps(self._state)
 

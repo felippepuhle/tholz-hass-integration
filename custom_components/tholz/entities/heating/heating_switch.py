@@ -99,6 +99,9 @@ class HeatingSwitch(SwitchEntity):
         await self._async_set_on(on=False)
 
     async def _async_set_on(self, on):
+        data = await self._manager.get_status()
+        self._state = get_in(data, self._heating_key)
+
         config = get_heating_switch_config(self._state)
         state = deepcopy(self._state)
 
