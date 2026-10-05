@@ -21,7 +21,8 @@ class TholzSocketClientManager:
             self._task = hass.loop.create_task(self._updater())
 
     async def stop(self):
-        """Cancel the polling task.
+        """
+        Cancel the polling task.
 
         Without this the task outlives the config entry, so reloading or
         removing the integration leaves an extra poller running against the
@@ -49,7 +50,7 @@ class TholzSocketClientManager:
                     await self._fetch_data()
             except asyncio.CancelledError:
                 raise
-            except Exception:  # noqa: BLE001
+            except Exception:
                 # Keep polling. An unhandled error here would end the task and
                 # silently stop every update until Home Assistant restarts.
                 _LOGGER.exception("unexpected error while polling the controller")

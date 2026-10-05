@@ -8,6 +8,7 @@ This custom integration provides control and monitoring for **Tholz Smart device
 
 - **Tholz Smart Pool v2**  
 - **Tholz Smart Heat v2**  
+- **Tholz TLS Smart**
 
 ### Features
 
