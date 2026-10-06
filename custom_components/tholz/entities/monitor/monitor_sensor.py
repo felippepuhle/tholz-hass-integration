@@ -141,7 +141,6 @@ class MonitorMeasureSensor(SensorEntity):
 
 class MonitorStatusSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = list(MONITOR_STATUS_NAMES.values())
 
     def __init__(self, hass, entry, manager, device_info, monitor_key, state):
         self._hass = hass
@@ -152,6 +151,7 @@ class MonitorStatusSensor(SensorEntity):
 
         self._state = state
 
+        self._attr_options = list(MONITOR_STATUS_NAMES.values())
         self._attr_should_poll = True
         self._attr_scan_interval = ENTITIES_SCAN_INTERVAL
 
