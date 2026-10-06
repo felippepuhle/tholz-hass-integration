@@ -10,11 +10,14 @@ This custom integration provides control and monitoring for **Tholz Smart device
 - **Tholz Smart Heat v2**  
 - **Tholz TLS Smart**
 
+Chlorinator monitor support is implemented for **THC30, THC45, THC60, and THC80**. It has been tested on the **THC45**; the other chlorinator models have not been independently tested.
+
 ### Features
 
 - **Sensors & Binary Sensors** (e.g., header and temperature sensors)  
 - **Water Heater Control** (heating entities)  
 - **Pump Controls** (switch entities)  
+- **Chlorinator monitoring and control**: salt level, water temperature, pool volume, salt required, water to replace, salt status, chlorine generation preset, and operation mode
 
 > ⚠️ Some entities are still under development and will be added in future updates.
 
