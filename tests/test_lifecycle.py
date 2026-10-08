@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntries, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry, entity_component
 
 from custom_components.tholz import async_setup_entry, async_unload_entry, PLATFORMS
@@ -25,8 +25,10 @@ async def test_initial_setup_retries_invalid_device_reads(
     monkeypatch.setattr(
         "custom_components.tholz.TholzSocketClient", lambda *_args: client
     )
-    with pytest.raises(ConfigEntryNotReady):
+    with pytest.raises(ConfigEntryNotReady, match=r"^Controller unavailable$") as error:
         await async_setup_entry(hass, entry)
+    assert type(error.value.__cause__) is HomeAssistantError
+    assert str(error.value.__cause__) == "Controller unavailable"
     assert "tholz" not in hass.data
     client.set_status.assert_not_called()
 
@@ -173,12 +175,13 @@ async def test_real_entry_forwarding_survives_immediate_poll_failure(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("response", [None, {"heatings": []}, OSError("offline")])
 async def test_real_config_entry_retry_recovers_initial_read_failure(
-    lifecycle_hass, entry, client, device_data, monkeypatch
+    lifecycle_hass, entry, client, device_data, monkeypatch, response
 ):
     """Compatibility coverage: actual HA retry callback, not mocked forwarding."""
     hass = lifecycle_hass
-    client.get_status.return_value = None
+    client.get_status.side_effect = [response]
     monkeypatch.setattr(
         "custom_components.tholz.TholzSocketClient", lambda *_args: client
     )
@@ -187,6 +190,7 @@ async def test_real_config_entry_retry_recovers_initial_read_failure(
         await hass.config_entries.async_add(entry)
         assert entry.state is ConfigEntryState.SETUP_RETRY
         assert entry.entry_id not in hass.data.get("tholz", {})
+        client.get_status.side_effect = None
         client.get_status.return_value = device_data
         # Deliver the real framework's startup retry event inside the fixture;
         # do not start Home Assistant, servers, or any network integrations.

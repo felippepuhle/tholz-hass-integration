@@ -1,6 +1,6 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
 from .socket.client import TholzSocketClient
 from .socket.client_manager import TholzSocketClientManager
@@ -42,8 +42,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Fail the setup here instead of forwarding the platforms with no data.
     # Entity setup assumes a populated payload, so an unreachable controller
     # would otherwise raise while the config flow is still running.
-    if await manager.get_status() is None:
-        raise ConfigEntryNotReady
+    try:
+        await manager.get_status()
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady(str(err)) from err
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}

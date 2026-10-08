@@ -1,7 +1,7 @@
 from ...utils.const import DOMAIN
 from ...utils.device import get_device_info
 from .const import HEATING_TYPE
-from .heating_temperature_sensor import HeatingReadSensor
+from .heating_read_sensor import HeatingReadSensor
 from .utils import get_heating_sensor_channels, get_heating_sensor_type
 
 

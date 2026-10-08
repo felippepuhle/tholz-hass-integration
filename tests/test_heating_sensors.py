@@ -4,6 +4,7 @@ import asyncio
 import logging
 from copy import deepcopy
 from datetime import timedelta
+from importlib import import_module
 from threading import Event
 
 import pytest
@@ -12,12 +13,26 @@ from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity_platform import EntityPlatform
 
 from custom_components.tholz.entities.heating.heating_temperature_sensor import (
+    HeatingTemperatureSensor,
     get_heating_temperature_sensors,
 )
 from custom_components.tholz.entities.heating.heating_setpoint_sensor import (
+    HeatingSetpointSensor,
     get_heating_setpoint_sensors,
 )
 from custom_components.tholz.sensor import async_setup_entry
+
+
+@pytest.mark.parametrize(
+    "sensor_type", [HeatingTemperatureSensor, HeatingSetpointSensor]
+)
+def test_heating_sensors_share_dedicated_read_sensor_module(sensor_type):
+    module_name = "custom_components.tholz.entities.heating.heating_read_sensor"
+    base = sensor_type.__bases__[0]
+    assert base.__module__ == module_name
+    assert base is import_module(module_name).HeatingReadSensor
+    assert issubclass(sensor_type, base)
+    assert issubclass(base, SensorEntity)
 
 
 @pytest.mark.asyncio

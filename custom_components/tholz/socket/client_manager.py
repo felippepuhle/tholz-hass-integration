@@ -3,6 +3,8 @@ import logging
 from copy import deepcopy
 from time import monotonic
 
+from homeassistant.exceptions import HomeAssistantError
+
 from ..entities.heating.utils import get_heating_sensor_type
 from .client import TholzSocketClient
 
@@ -113,8 +115,11 @@ class TholzSocketClientManager:
         async with self._lock:
             if self._data is None or not self.is_fresh:
                 await self._fetch_data()
+            if not self.is_fresh:
+                message = "Controller unavailable"
+                raise HomeAssistantError(message)
             # Legacy entities share command state; sensors use a separate copy.
-            return self._data if self.is_fresh else None
+            return self._data
 
     async def get_sensor_status(self):
         """Return only fresh native reads, without waiting or retrying I/O."""

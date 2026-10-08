@@ -5,6 +5,7 @@ import asyncio
 from copy import deepcopy
 
 import pytest
+from homeassistant.exceptions import HomeAssistantError
 
 
 @pytest.mark.asyncio
@@ -140,3 +141,39 @@ async def test_non_heating_device_snapshots_remain_supported(manager, client, da
     client.get_status.return_value = data
     assert await manager.get_status() == data
     assert manager.is_fresh
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("lost_read", ["initial", "expired"])
+@pytest.mark.parametrize(
+    "failure", [None, {"ok": True}, {"heatings": []}, OSError("offline")]
+)
+async def test_get_status_raises_offline_error_then_recovers(
+    manager, client, device_data, clock, lost_read, failure
+):
+    successful = None
+    if lost_read == "expired":
+        await manager.get_status()
+        successful = manager.last_successful_read
+        clock[0] += 21
+    calls = client.get_status.call_count
+    client.get_status.side_effect = [failure, device_data]
+    # Read-only sensors must stay nonblocking, including during command I/O.
+    async with manager._lock:
+        assert await asyncio.wait_for(manager.get_sensor_status(), timeout=0.1) is None
+    assert client.get_status.call_count == calls
+    with pytest.raises(HomeAssistantError, match=r"^Controller unavailable$"):
+        await manager.get_status()
+    assert not manager._lock.locked()
+    assert manager.last_successful_read == successful
+    assert not manager.is_fresh
+    assert await manager.get_sensor_status() is None
+    assert client.get_status.call_count == calls + 1
+    client.set_status.assert_not_called()
+    recovered = await asyncio.wait_for(manager.get_status(), timeout=1)
+    assert recovered == device_data
+    assert await manager.get_status() is recovered
+    assert manager.is_fresh
+    assert await manager.get_sensor_status() == device_data
+    assert client.get_status.call_count == calls + 2
+    client.set_status.assert_not_called()

@@ -20,6 +20,7 @@ from custom_components.tholz.entities.led.led_light import get_led_lights
 from custom_components.tholz.entities.led.led_effect_speed_number import (
     get_led_effect_speed_numbers,
 )
+from custom_components.tholz.entities.output.output_switch import get_output_switches
 
 
 @pytest.mark.asyncio
@@ -322,3 +323,31 @@ async def test_offline_heating_command_fails_cleanly_without_corrupting_state(
     assert (entity.unique_id, entity.name, entity.device_info) == identity
     assert await manager.get_sensor_status() is None
     assert client.get_status.call_count == calls + 1
+
+
+@pytest.mark.asyncio
+async def test_non_heating_update_inherits_offline_error_and_recovers(
+    hass, entry, manager, client, device_data, clock
+):
+    device_data["outputs"] = {"o1": {"id": 0, "on": False}}
+    data = await manager.get_status()
+    entity = get_output_switches(hass, entry, manager, data)[0]
+    await entity.async_update()
+    original = deepcopy(entity._state)
+    identity = (entity.unique_id, entity.name, entity.device_info)
+    clock[0] += 21
+    client.get_status.return_value = None
+    with pytest.raises(HomeAssistantError, match=r"^Controller unavailable$"):
+        await entity.async_update()
+    assert entity._state == original
+    assert (entity.unique_id, entity.name, entity.device_info) == identity
+    assert not manager._lock.locked()
+    client.set_status.assert_not_called()
+    recovered = deepcopy(data)
+    recovered["outputs"]["o1"]["on"] = True
+    client.get_status.return_value = recovered
+    await asyncio.wait_for(entity.async_update(), timeout=1)
+    assert entity.is_on
+    assert (entity.unique_id, entity.name, entity.device_info) == identity
+    assert client.get_status.call_count == 3
+    client.set_status.assert_not_called()
