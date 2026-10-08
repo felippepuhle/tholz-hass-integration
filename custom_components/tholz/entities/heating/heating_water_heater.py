@@ -9,6 +9,7 @@ from homeassistant.components.water_heater import (
     STATE_ECO,
 )
 from homeassistant.const import UnitOfTemperature
+from homeassistant.exceptions import HomeAssistantError
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
 from ...utils.device import get_device_info
@@ -150,6 +151,9 @@ class HeatingWaterHeater(WaterHeaterEntity):
 
     async def async_set_temperature(self, **kwargs):
         data = await self._manager.get_status()
+        if not data:
+            message = "Controller unavailable"
+            raise HomeAssistantError(message)
         self._state = get_in(data, self._heating_key)
 
         self._state["sp"] = int(kwargs.get("temperature") * 10)
@@ -157,6 +161,9 @@ class HeatingWaterHeater(WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode):
         data = await self._manager.get_status()
+        if not data:
+            message = "Controller unavailable"
+            raise HomeAssistantError(message)
         self._state = get_in(data, self._heating_key)
 
         config = get_heating_water_heater_config(self._state)

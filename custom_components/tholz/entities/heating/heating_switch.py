@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.exceptions import HomeAssistantError
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
 from ...utils.device import get_device_info
@@ -100,6 +101,9 @@ class HeatingSwitch(SwitchEntity):
 
     async def _async_set_on(self, on):
         data = await self._manager.get_status()
+        if not data:
+            message = "Controller unavailable"
+            raise HomeAssistantError(message)
         self._state = get_in(data, self._heating_key)
 
         config = get_heating_switch_config(self._state)

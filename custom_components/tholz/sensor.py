@@ -1,5 +1,6 @@
 from .entities.header.header_sensor import get_header_sensors
 from .entities.heating.heating_temperature_sensor import get_heating_temperature_sensors
+from .entities.heating.heating_setpoint_sensor import get_heating_setpoint_sensors
 from .entities.monitor.monitor_sensor import get_monitor_sensors
 from .utils.const import DOMAIN
 
@@ -13,6 +14,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = [
         *get_header_sensors(hass, entry, manager, data),
         *get_heating_temperature_sensors(hass, entry, manager, data),
+        *get_heating_setpoint_sensors(hass, entry, manager, data),
         *get_monitor_sensors(hass, entry, manager, data),
     ]
 

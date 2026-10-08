@@ -45,8 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if await manager.get_status() is None:
         raise ConfigEntryNotReady
 
-    manager.start(hass)
-
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {
@@ -55,6 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Discover every platform from the initial read before polling can fail.
+    manager.start(hass)
 
     return True
 
