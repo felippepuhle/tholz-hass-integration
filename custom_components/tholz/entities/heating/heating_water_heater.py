@@ -145,8 +145,7 @@ class HeatingWaterHeater(WaterHeaterEntity):
 
     async def async_update(self):
         data = await self._manager.get_status()
-        if data:
-            self._state = get_in(data, self._heating_key)
+        self._state = get_in(data, self._heating_key)
 
     async def async_set_temperature(self, **kwargs):
         data = await self._manager.get_status()

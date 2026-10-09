@@ -40,6 +40,10 @@ ignore = [
     "TID252",
 ]
 
+[lint.per-file-ignores]
+# Pytest assertions, expected fixture values, and direct poll/lock lifecycle hooks.
+"tests/**/*.py" = ["S101", "PLR2004", "SLF001"]
+
 [lint.flake8-pytest-style]
 fixture-parentheses = false
 
