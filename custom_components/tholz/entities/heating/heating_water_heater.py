@@ -50,6 +50,9 @@ HEATING_WATER_HEATER_CONFIG = {
     },
     HEATING_TYPE.SOLAR_RESIDENCIAL: {
         "sensor_key": "t3",
+        # Controladores legados (ex.: SmartHeat de 1ª geração) não expõem t3;
+        # nesse caso a temperatura atual cai para t2 (reservatório).
+        "sensor_key_fallbacks": ["t2"],
         "name": "Boiler",
         "icon": "mdi:water-boiler",
         "tholz_to_ha_opmode": {
@@ -179,9 +182,11 @@ class HeatingWaterHeater(WaterHeaterEntity):
     @property
     def current_temperature(self):
         config = get_heating_water_heater_config(self._state)
-        sensor_key = config["sensor_key"]
-        if self._state.get(sensor_key) is not None:
-            return self._state.get(sensor_key) / 10
+        sensor_keys = (config["sensor_key"], *config.get("sensor_key_fallbacks", ()))
+        for sensor_key in sensor_keys:
+            value = self._state.get(sensor_key)
+            if value is not None:
+                return value / 10
         return None
 
     @property
