@@ -1,12 +1,12 @@
 """Config-entry lifecycle regression tests with mocked device I/O."""
 
 import asyncio
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 
 import pytest
 
-from homeassistant.config_entries import ConfigEntries, ConfigEntryState
+from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry, entity_component
@@ -58,6 +58,49 @@ async def test_setup_and_unload_stop_the_only_poller(hass, entry, client, monkey
     assert entry.entry_id not in hass.data["tholz"]
     await manager.stop()
     client.set_status.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_options_override_entry_data_and_reload_entry(
+    hass, entry, client, monkeypatch
+):
+    """Options saved in HA must override stale setup data and trigger reload."""
+    hass.config_entries = ConfigEntries(hass, {})
+    forward = AsyncMock()
+    reload_entry = AsyncMock()
+    monkeypatch.setattr(hass.config_entries, "async_forward_entry_setups", forward)
+    monkeypatch.setattr(hass.config_entries, "async_reload", reload_entry)
+
+    entry.data.update({"host": "192.168.10.85", "port": 4000, "polling_interval": 5})
+    entry.options.update({"host": "192.168.20.85", "port": 4100, "polling_interval": 7})
+
+    # The client constructor is synchronous; a regular mock also records args.
+    client_factory = Mock(return_value=client)
+    monkeypatch.setattr("custom_components.tholz.TholzSocketClient", client_factory)
+    manager_start = Mock()
+    monkeypatch.setattr(
+        "custom_components.tholz.TholzSocketClientManager.start", manager_start
+    )
+
+    listeners = []
+    add_listener = ConfigEntry.add_update_listener
+
+    def capture_listener(config_entry, listener):
+        listeners.append(listener)
+        return add_listener(config_entry, listener)
+
+    monkeypatch.setattr(ConfigEntry, "add_update_listener", capture_listener)
+
+    assert await async_setup_entry(hass, entry)
+    client_factory.assert_called_once_with("192.168.20.85", 4100)
+    manager = hass.data["tholz"][entry.entry_id]["manager"]
+    assert manager._polling_interval == 7
+    manager_start.assert_called_once_with(hass)
+    assert len(listeners) == 1
+
+    await listeners[0](hass, entry)
+    reload_entry.assert_awaited_once_with(entry.entry_id)
+    await manager.stop()
 
 
 @pytest.mark.asyncio

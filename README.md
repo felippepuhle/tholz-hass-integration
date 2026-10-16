@@ -96,6 +96,9 @@ After restarting, add the integration via the **Home Assistant UI**:
      - **Port**: Socket connection port  
      - **Polling Interval**: How often (in seconds) device data is refreshed
 
+For an existing entry, update the host, port, or polling interval in the
+integration's **Options**. The entry reloads to apply the new values.
+
 ## Example configuration in action
 
 **Controls:**  

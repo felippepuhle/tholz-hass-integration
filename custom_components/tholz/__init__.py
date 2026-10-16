@@ -30,9 +30,10 @@ async def async_setup(_hass, _config):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    host = entry.data.get(CONF_HOST_KEY)
-    port = entry.data.get(CONF_PORT_KEY, CONF_PORT_DEFAULT_VALUE)
-    polling_interval = entry.data.get(
+    config = {**entry.data, **entry.options}
+    host = config.get(CONF_HOST_KEY)
+    port = config.get(CONF_PORT_KEY, CONF_PORT_DEFAULT_VALUE)
+    polling_interval = config.get(
         CONF_POLLING_INTERVAL_KEY, CONF_POLLING_INTERVAL_DEFAULT_VALUE
     )
 
@@ -58,8 +59,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Discover every platform from the initial read before polling can fail.
     manager.start(hass)
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
