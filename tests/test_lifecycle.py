@@ -1,6 +1,7 @@
 """Config-entry lifecycle regression tests with mocked device I/O."""
 
 import asyncio
+from dataclasses import replace
 from unittest.mock import AsyncMock, Mock
 
 
@@ -71,8 +72,11 @@ async def test_options_override_entry_data_and_reload_entry(
     monkeypatch.setattr(hass.config_entries, "async_forward_entry_setups", forward)
     monkeypatch.setattr(hass.config_entries, "async_reload", reload_entry)
 
-    entry.data.update({"host": "192.168.10.85", "port": 4000, "polling_interval": 5})
-    entry.options.update({"host": "192.168.20.85", "port": 4100, "polling_interval": 7})
+    entry = replace(
+        entry,
+        data={"host": "192.168.10.85", "port": 4000, "polling_interval": 5},
+        options={"host": "192.168.20.85", "port": 4100, "polling_interval": 7},
+    )
 
     # The client constructor is synchronous; a regular mock also records args.
     client_factory = Mock(return_value=client)
