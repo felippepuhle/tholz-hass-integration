@@ -20,6 +20,7 @@ from custom_components.tholz.entities.heating.heating_setpoint_sensor import (
     HeatingSetpointSensor,
     get_heating_setpoint_sensors,
 )
+from custom_components.tholz.entities.heating.utils import get_valid_heatings
 from custom_components.tholz.sensor import async_setup_entry
 
 
@@ -119,10 +120,10 @@ async def test_sensor_platform_adds_dynamic_read_only_backup_targets(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("raw", [None, True, "390", float("nan"), float("inf"), 0])
-async def test_backup_target_discovery_without_temperature(
+async def test_backup_target_discovery_with_invalid_or_zero_setpoint(
     hass, entry, manager, device_data, raw
 ):
-    device_data["heatings"]["h2"] = {"type": 5, "sp": raw}
+    device_data["heatings"]["h2"] = {"type": 5, "t1": 251, "sp": raw}
     hass.data["tholz"] = {entry.entry_id: {"manager": manager}}
     entities = []
     await async_setup_entry(hass, entry, lambda new, **_kwargs: entities.extend(new))
@@ -185,11 +186,26 @@ async def test_temperature_invalid_number_is_unavailable(
 
 
 @pytest.mark.asyncio
-async def test_zero_temperature_is_not_missing_at_discovery(
+@pytest.mark.parametrize("legacy", [False, True])
+@pytest.mark.parametrize("raw", [0, None])
+async def test_temperature_discovery_skips_channels_without_valid_temperatures(
+    hass, manager, entry, device_data, legacy, raw
+):
+    state = {"type": 3, "sp": raw, **{f"t{i}": raw for i in range(1, 6)}}
+    if legacy:
+        device_data.pop("heatings")
+        device_data["heating"] = state
+    else:
+        device_data["heatings"]["h1"] = state
+    data = await manager.get_status()
+    assert get_heating_temperature_sensors(hass, entry, manager, data) == []
+
+
+@pytest.mark.asyncio
+async def test_zero_temperature_is_preserved_on_valid_channel(
     hass, manager, entry, device_data
 ):
-    for key in ("t1", "t2", "t3"):
-        device_data["heatings"]["h1"][key] = 0
+    device_data["heatings"]["h1"]["t1"] = 0
     data = await manager.get_status()
     entities = get_heating_temperature_sensors(None, entry, manager, data)
     assert len(entities) == 3
@@ -390,3 +406,12 @@ async def test_backup_target_initially_missing_then_becomes_valid(
     assert entity.available
     assert entity.native_value == 0
     assert (entity.unique_id, entity.name, entity.device_info) == identity
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+@pytest.mark.parametrize("raw", [0, None])
+def test_heating_discovery_uses_setpoint_without_temperature(legacy, raw):
+    state = {"type": 5, "sp": 390, **{f"t{i}": raw for i in range(1, 6)}}
+    data = {"heating": state} if legacy else {"heatings": {"h2": state}}
+    path = ["heating"] if legacy else ["heatings", "h2"]
+    assert get_valid_heatings(data) == [(path, state)]
