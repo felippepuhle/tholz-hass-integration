@@ -2,7 +2,7 @@ from ...utils.const import DOMAIN
 from ...utils.device import get_device_info
 from .const import HEATING_TYPE
 from .heating_read_sensor import HeatingReadSensor
-from .utils import get_heating_sensor_channels, get_heating_sensor_type
+from .utils import get_valid_heatings, get_heating_sensor_type
 
 
 HEATING_SETPOINT_SENSOR_NAMES = {
@@ -15,7 +15,7 @@ def get_heating_setpoint_sensors(hass, entry, manager, data):
     """Publish each backup channel's native sp, never the solar target."""
     device_info = get_device_info(entry, data)
     sensors = []
-    for heating_key, state in get_heating_sensor_channels(data):
+    for heating_key, state in get_valid_heatings(data):
         name = HEATING_SETPOINT_SENSOR_NAMES.get(get_heating_sensor_type(state))
         if name is not None:
             sensors.append(

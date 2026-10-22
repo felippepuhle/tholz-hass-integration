@@ -4,7 +4,7 @@ from .const import HEATING_TYPE
 from .heating_read_sensor import HeatingReadSensor
 from .utils import (
     get_heating_sensor_type,
-    get_heating_sensor_channels,
+    get_valid_heatings,
 )
 
 
@@ -65,7 +65,7 @@ def get_heating_temperature_sensor_config(state):
 def get_heating_temperature_sensors(hass, entry, manager, data):
     device_info = get_device_info(entry, data)
     heating_temperature_sensors = []
-    for heating_key, state in get_heating_sensor_channels(data):
+    for heating_key, state in get_valid_heatings(data):
         config = get_heating_temperature_sensor_config(state)
         if config is None:
             continue
