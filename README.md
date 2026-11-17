@@ -23,6 +23,12 @@ Chlorinator monitor support is implemented for **THC30, THC45, THC60, and THC80*
 
 ## Heating readings and backup targets
 
+The SmartHeat v2 (TSZ1505N) thermostat water heater reports its current
+temperature from probe T4, in degrees Celsius. The current temperature is
+unavailable when the controller has no valid T4 reading. See the
+[SmartHeat manual](https://tholz.s3.us-east-1.amazonaws.com/manuais/TSZ1505N-v2-pt_BR.pdf),
+section 15.8.1.
+
 Backup heating channels (`APOIO_ELETRICO` and `APOIO_GAS`) expose read-only
 **Temperatura Alvo Apoio Elétrico** and **Temperatura Alvo Apoio a Gás** sensors.
 Their values come from that channel's native `sp / 10`, in degrees Celsius,
