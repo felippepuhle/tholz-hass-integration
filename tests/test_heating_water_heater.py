@@ -47,3 +47,43 @@ async def test_current_temperature_prefers_t3_when_available(
     water_heater = get_heating_water_heaters(hass, entry, manager, data)[0]
     await water_heater.async_update()
     assert water_heater.current_temperature == 46.3
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("model", "t1", "t4", "expected_temperature"),
+    [
+        (21505, None, 321, 32.1),
+        (21505, 450, 321, 32.1),
+        (21505, 450, 0, 0.0),
+        (21505, 450, None, None),
+        (21505, 450, False, None),
+        (21505, 450, "321", None),
+        (21392, 450, 321, 45.0),
+    ],
+)
+async def test_thermostat_current_temperature_uses_model_probe(
+    hass, entry, manager, client, model, t1, t4, expected_temperature
+):
+    """The SmartHeat v2 thermostat reads T4, and legacy thermostats read T1."""
+    client.get_status.return_value = {
+        "id": model,
+        "heatings": {
+            "heat3": {
+                "type": 10,
+                "t1": t1,
+                "t4": t4,
+                "sp": 540,
+                "on": False,
+                "opMode": 0,
+            }
+        },
+    }
+    data = await manager.get_status()
+    water_heater = get_heating_water_heaters(hass, entry, manager, data)[0]
+    await water_heater.async_update()
+
+    assert water_heater.current_temperature == expected_temperature
+    assert water_heater.target_temperature == 54.0
+    assert water_heater.current_operation == "off"
+    client.set_status.assert_not_called()

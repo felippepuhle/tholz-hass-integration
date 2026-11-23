@@ -11,10 +11,10 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import UnitOfTemperature
 
 from ...utils.const import DOMAIN, CONF_NAME_KEY, ENTITIES_SCAN_INTERVAL
-from ...utils.device import get_device_info
+from ...utils.device import DEVICE_MODEL, get_device_info
 from ...utils.dict import get_in, set_in
 from .const import HEATING_TYPE, HEATING_OP_MODE
-from .utils import get_heating_type, get_valid_heatings
+from .utils import get_heating_type, get_native_temperature, get_valid_heatings
 
 
 HEATING_WATER_HEATER_CONFIG = {
@@ -127,6 +127,7 @@ def get_heating_water_heaters(hass, entry, manager, data):
                 device_info,
                 heating_key,
                 state,
+                device_model=data.get("id"),
             )
         )
 
@@ -134,11 +135,22 @@ def get_heating_water_heaters(hass, entry, manager, data):
 
 
 class HeatingWaterHeater(WaterHeaterEntity):
-    def __init__(self, hass, entry, manager, device_info, heating_key, state):
+    def __init__(
+        self,
+        hass,
+        entry,
+        manager,
+        device_info,
+        heating_key,
+        state,
+        *,
+        device_model=None,
+    ):
         self._hass = hass
         self._entry = entry
         self._manager = manager
         self._device_info = device_info
+        self._device_model = device_model
         self._heating_key = heating_key
 
         self._state = state
@@ -181,6 +193,13 @@ class HeatingWaterHeater(WaterHeaterEntity):
 
     @property
     def current_temperature(self):
+        if (
+            self._device_model == DEVICE_MODEL.SMART_HEAT_V2
+            and get_heating_type(self._state) == HEATING_TYPE.TERMOSTATO
+        ):
+            # The TSZ1505N uses the T4 probe for its third auxiliary output.
+            return get_native_temperature(self._state.get("t4"))
+
         config = get_heating_water_heater_config(self._state)
         sensor_keys = (config["sensor_key"], *config.get("sensor_key_fallbacks", ()))
         for sensor_key in sensor_keys:
